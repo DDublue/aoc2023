@@ -4,11 +4,15 @@
 # Day 3: Gear Ratios
 # ----------------------------------------------------------------------------
 import time
-
+from collections import defaultdict
 
 def issymbol(s):
     # print(s)
     return not (s.isdigit() or s == '.')
+
+def isgear(s):
+    # print(s)
+    return s == '*'
 
 def part1(file=str):
     ans = 0
@@ -49,14 +53,53 @@ def part1(file=str):
                 else:
                     j += 1
                     k += 1
-            
     return ans
 
 
 def part2(file=str):
     ans = 0
     with open(file, 'r') as f:
-        lines = f.readlines()
+        lines = f.read().splitlines()
+        line_cnt = len(lines)
+        line_len = len(lines[0])
+        gears = defaultdict(list)
+        for i in range(len(lines)):
+            j = 0
+            k = 0
+            while j < line_len:
+                if lines[i][j].isdigit():
+                    # Find location of entire number
+                    while k < line_len and lines[i][k].isdigit():
+                        k += 1
+                    
+                    # Check perimeter for any stars
+                    if j > 0 and isgear(lines[i][j-1]):
+                        gears[f"({i},{j-1})"].append(int(lines[i][j:k]))
+                    elif k < line_len-1 and isgear(lines[i][k]):
+                        gears[f"({i},{k})"].append(int(lines[i][j:k]))
+                    else:
+                        start = j-1 if j > 0 else j
+                        end = k+1 if k < line_len-1 else k
+                        if i > 0:
+                            for col in range(start, end):
+                                if isgear(lines[i-1][col]):
+                                    gears[f"({i-1},{col})"].append(int(lines[i][j:k]))
+                                    break
+                        if i < line_cnt-1:
+                            for col in range(start, end):
+                                if isgear(lines[i+1][col]):
+                                    gears[f"({i+1},{col})"].append(int(lines[i][j:k]))
+                                    break
+                                
+                    # Set 'j' to current position
+                    j = k
+                else:
+                    j += 1
+                    k += 1
+        # find all gears in "gears"
+        for key in gears:
+            if len(gears[key]) == 2:
+                ans += (gears[key][0] * gears[key][1])
     return ans
 
 
